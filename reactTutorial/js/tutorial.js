@@ -7,7 +7,7 @@ var Component = createReactClass({
     render: function () {
         return (
             <div>
-                <h1> the list </h1>
+                <h1> Hello world </h1>
             </div>
         );
     }
