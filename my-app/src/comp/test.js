@@ -1,87 +1,99 @@
 import React, { Component } from 'react';
+import $ from "jquery";
 
 class Test extends Component {
 
-    url = 'https://api.themoviedb.org/3/discover/movie?' +
-        'api_key=95787530723fdf659807136ee61b9df9&' +
-
-        'language=en-US&' +
-        'sort_by=popularity.desc&' +
-        'include_adult=false&' +
-        'include_video=true&' +
-        'primary_release_year=2018&'+
-        'page=1';
-    mediaUrl = "http://image.tmdb.org/t/p/w185//";
-
     constructor(props) {
-        super(props);
+        super(props)
+
         this.state = {
-            result: [],
-              page: '',
-            videos: []
-        };
+            // state массив фильмов
+            movies: []
+        }
     }
 
     componentDidMount() {
-        fetch(this.url)
+        // обьявляем массив, в котором будет окончательный результат со всеми фильмами
+        let moviesArray = [];
+        // получаем все фильмы
+        fetch('https://api.themoviedb.org/3/discover/movie?api_key=95787530723fdf659807136ee61b9df9&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=1')
             .then(res => res.json())
-            .then(post => {this.setState({result: post.results, page:post.page})});
+            .then(movies => {
+                // перебираем все получаенные фильмы
+                movies.results.forEach((movie, movieIndex) => {
+                    // обьявляем массив, в который будет записываться все видео фильма
+                    let movieVideos = [];
+                    // получаем все видео по одному фильму
+                    fetch('https://api.themoviedb.org/3/movie/'+ movie.id +'/videos?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
+                        .then(res => res.json())
+                        .then(videos => {
+                            // перебираем все видео
+                            videos.results.forEach((video, videoIndex) => {
+                                // добавляем видео в массив
+                                movieVideos.push(video.key)
+                                // проверяем, если количество полученных видео равна индексу последнего видео в массиве, тогда добавлем фильм в массив окончательных фильмов
+                                if (videoIndex+1 === videos.results.length){
+                                    moviesArray.push({
+                                        'id':movie.id,
+                                        'title' : movie.title,
+                                        'rating': movie.vote_avarage,
+                                        'picture': movie.poster_path,
+                                        'videos': movieVideos
+                                    });
+                                }
+                            });
+                            // проверяем, если количество полученных фильмов равна индексу последнего фильма в массиве, тогда сохраняем результат в state
+                            if (movieIndex+1 === movies.results.length){
+                                //
+                                this.setState({movies: moviesArray});
+                                console.log(moviesArray);
+                            }
+                        });
+                });
+            });
     }
-
-    getVideo(id){
-
-        var requestURL = 'https://api.themoviedb.org/3/movie/'+ id +'/videos?api_key=95787530723fdf659807136ee61b9df9&language=en-US'
-        var request = new XMLHttpRequest();
-        request.open('GET', requestURL);
-
-        request.responseType = 'json';
-        request.send();
-
-            request.onload = function () {
-                var films = request.response;
-               console.log(films['results'][0]['key']);
-                () => {this.setState({videos: (films['results'][0]['key'])})};
-                return  (films['results'][0]['key']);
-                console.log(films);
-
-
-            };
-        //console.log(this.state.videos);
-return this.state.videos;
-    }
-    //     console.log(id);
-    //     fetch('https://api.themoviedb.org/3/movie/'+ id +'/videos?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
-    //     .then(
-    //         res => res.json()
-    //     )
-    //         .then(videos => videos.results.key);
-    //
-    // }
-
 
     render() {
+
+        $(document).ready(function(){
+            $("p").hover(function(){
+                $(this).css("image", "yellow");
+            }, function(){
+                $(this).css("color", "pink");
+            });
+        });
+
         return (
+
             <div>
-                {this.state.page}
-                {this.state.result.map(movie =>
+                {this.state.movies.map(movie =>
                     <div className={'movies'} key={movie.id}>
-
-                        <img src={this.mediaUrl + movie.backdrop_path} alt={movie.title}/>
-                        <iframe width="560"
-                                height="315"
-                                src={'https://www.youtube.com/embed/' + this.getVideo(movie.id) }
-                                frameBorder="0"
-                                allow="autoplay; encrypted-media" allowFullScreen>
-
-                        </iframe>
-                        <img src={this.mediaUrl + movie.poster_path} alt={movie.title}/>
+                        <ul>
+                            <li><button src="Play.png" alt="playy" /></li>
+                        </ul>
+                        <img
+                                src={'http://image.tmdb.org/t/p/w185/' + movie.picture} alt={movie.title}/>
                         <p>{movie.title}</p>
+                        {/*Я убрал iframe, потому что их слишком много, и у меня начинает браузер глючить*/}
 
+                        {movie.videos.map((video, index) =>
+                            <p key={index}> video src = {'https://www.youtube.com/embed/'+video}</p>
+                            // <iframe width="560"
+                            //         height="315"
+                            //         src={'https://www.youtube.com/embed/' + video }
+                            //         frameBorder="0"
+                            //         allow="autoplay; encrypted-media" allowFullScreen>
+                            //
+                            // </iframe>
+                        )}
+                        <hr/>
+                        <br/>
                     </div>
                 )}
             </div>
         );
     }
 }
+
 
 export default Test;
