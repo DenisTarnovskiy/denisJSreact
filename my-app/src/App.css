@@ -1,6 +1,9 @@
 .App {
   text-align: center;
 }
+*{
+  box-sizing: border-box;
+}
 
 .App-logo {
   animation: App-logo-spin infinite 20s linear;
@@ -21,6 +24,151 @@
 .App-intro {
   font-size: large;
 }
+
+.movies-wrapper{
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+.movies{
+  border: 1px solid #ccc;
+  margin: 5px;
+  width: 185px;
+}
+.movie-content{
+  padding: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  height: 65px;
+  text-align: center;
+}
+
+.movie-content h3{
+  margin: 5px 0;
+  text-align: center;
+  max-height: 30px;
+  overflow: hidden;
+  width: 100%;
+  font-size: 14px;
+}
+.movie-content b{
+  margin:0  auto;
+  width: 100%;
+  margin-top: auto;
+}
+
+.movie-img-wrapper{
+  position: relative;
+  margin: auto;
+}
+.movie-img-hover{
+  position: absolute;
+  top:0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  background-color: rgba(133, 133, 133, 0.49);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+.page-wrapper{
+  display: flex;
+}
+main{
+  width: 80%;
+}
+aside{
+  width: 20%;
+  border-right: 1px solid rgba(78, 78, 78, 0.58);
+}
+
+.search-wrapper, aside header{
+  height: 60px;
+  background-color: #222222;
+  line-height: 60px;
+  font-size: 18px;
+  color: #fff;
+  text-align: left;
+}
+aside header{
+  padding: 0 20px;
+}
+main .page-title{
+  font-size: 28px;
+  font-weight: bold;
+  color: #232323;
+  width: 100%;
+  text-align: left;
+  padding: 5px 20px;
+}
+.search-wrapper input{
+  line-height: 60px;
+  padding: 0 20px;
+  border: none;
+  width: 100%;
+  color: #fff;
+  background-color: rgba(173, 173, 173, 0.49);
+  font-size: 25px;
+}
+.search-wrapper input:focus{
+  outline: none;
+}
+::-webkit-input-placeholder{
+  color: #fff;
+}
+
+.paginator{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.paginator .prev, .paginator .next{
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  padding: 5px 15px;
+  margin: 5px;
+  border-radius: 30px;
+  background-color: #222222;
+  transition: 1s;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.paginator .prev:hover, .paginator .next:hover{
+  background-color: #ff2125;
+}
+
+.movie-img-hover .popup-toggle{
+  width: 70px;
+  height: 70px;
+  background-image: url("img/Play.png");
+  background-size: cover;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.movie-img-hover:hover{
+  opacity: 1;
+}
+.movie-video-wrapper{
+  position: fixed;
+  top:0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(34, 34, 34, 0.57);
+}
+
 
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
