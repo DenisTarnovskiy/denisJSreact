@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
+import * as Rx from 'rxjs';
+import { from } from 'rxjs';
 
-class Test extends Component {
+
+const axios = require('axios');class Test extends Component {
 
     constructor(props) {
         super(props);
@@ -10,8 +13,12 @@ class Test extends Component {
             movies: [],
             showPopup: false,
             currentVideo: '',
-            page: 1
+            page: 1,
+            value: ''
+
         };
+        this.updateInput = this.updateInput.bind(this);
+
         this.handleChange = this.handleChange.bind(this);
     }
 
@@ -20,23 +27,44 @@ class Test extends Component {
         let moviesArray = [];
         const apiKey = '95787530723fdf659807136ee61b9df9';
         // получаем все фильмы
-        fetch('https://api.themoviedb.org/3/discover/movie?api_key=' + apiKey + '&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page)
-            .then(res => res.json())
+
+
+    //     let response = fetch("https://api.themoviedb.org/3/discover/movie?api_key=' + apiKey + '&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page")
+    //         .then(response => {
+    //             return response.json();
+    //         });
+    //
+    //     let stream = Rx.Observable.fromPromise(response)
+    //         .map(data => data.videos
+    //         .map(video =>
+    //             ({
+    //                 'id': video.id,
+    //                 'title': video.title,
+    //                // 'rating': rating,
+    //                 'picture': video.poster_path,
+    //               //  'videos': movieVideos
+    //             })
+    //         )
+    //         );
+    // }
+
+
+        axios.get('https://api.themoviedb.org/3/discover/movie?api_key=' + apiKey + '&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page)
             .then(movies => {
                 // перебираем все получаенные фильмы
-                movies.results.forEach((movie, movieIndex) => {
+                console.log(movies);
+                movies.data.results.forEach((movie, movieIndex) => {
                     // обьявляем массив, в который будет записываться все видео фильма
                     let movieVideos = [];
                     // получаем все видео по одному фильму
-                    fetch('https://api.themoviedb.org/3/movie/'+ movie.id +'/videos?api_key=' + apiKey + '&language=en-US')
-                        .then(res => res.json())
+                    axios.get('https://api.themoviedb.org/3/movie/'+ movie.id +'/videos?api_key=' + apiKey + '&language=en-US')
                         .then(videos => {
                             // перебираем все видео
-                            videos.results.forEach((video, videoIndex) => {
+                            videos.data.results.forEach((video, videoIndex) => {
                                 // добавляем видео в массив
                                 movieVideos.push(video.key);
                                 // проверяем, если количество полученных видео равна индексу последнего видео в массиве, тогда добавлем фильм в массив окончательных фильмов
-                                if (videoIndex+1 === videos.results.length){
+                                if (videoIndex+1 === videos.data.results.length){
                                     // неведомая залупа, сейвим рейтинг в переменную
                                     const rating = movie.vote_average;
                                     moviesArray.push({
@@ -49,7 +77,7 @@ class Test extends Component {
                                 }
                             });
                             // проверяем, если количество полученных фильмов равна индексу последнего фильма в массиве, тогда сохраняем результат в state
-                            if (movieIndex+1 === movies.results.length){
+                            if (movieIndex+1 === movies.data.results.length){
                                 //
                                 this.setState({movies: moviesArray});
                                 console.log(moviesArray);
@@ -84,6 +112,62 @@ class Test extends Component {
         console.log(this.state.page);
     }
 
+    videoSearch(stringName){
+
+        let foundFilms = [];
+
+        const apiKey = '95787530723fdf659807136ee61b9df9';
+        // получаем все фильмы
+
+        axios.get("https://api.themoviedb.org/3/search/movie?api_key=" + apiKey + "&language=en-US&query=" + stringName + " &page=1&include_adult=false")
+            .then(movies => {
+                // перебираем все получаенные фильмы
+                console.log(movies);
+                movies.data.results.forEach((movie, movieIndex) => {
+                    // обьявляем массив, в который будет записываться все видео фильма
+                    let movieVideos = [];
+                    // получаем все видео по одному фильму
+                    axios.get('https://api.themoviedb.org/3/movie/'+ movie.id +'/videos?api_key=' + apiKey + '&language=en-US')
+                        .then(videos => {
+                            // перебираем все видео
+                            videos.data.results.forEach((video, videoIndex) => {
+                                // добавляем видео в массив
+                                movieVideos.push(video.key);
+                                // проверяем, если количество полученных видео равна индексу последнего видео в массиве, тогда добавлем фильм в массив окончательных фильмов
+                                if (videoIndex+1 === videos.data.results.length){
+                                    // неведомая залупа, сейвим рейтинг в переменную
+                                    const rating = movie.vote_average;
+                                    foundFilms.push({
+                                        'id':movie.id,
+                                        'title' : movie.title,
+                                        'rating': rating,
+                                        'picture': movie.poster_path,
+                                        'videos': movieVideos
+                                    });
+                                }
+                            });
+                            // проверяем, если количество полученных фильмов равна индексу последнего фильма в массиве, тогда сохраняем результат в state
+                            if (movieIndex+1 === movies.data.results.length){
+                                //
+                                this.setState({movies: foundFilms});
+                                console.log(foundFilms);
+                            }
+                        });
+                });
+               // console.log(this.state.movies)
+            });
+    }
+
+
+    updateInput(evt){
+
+        console.log(evt);
+
+        this.state={value: evt.target.value};
+        this.videoSearch(this.state.value);
+        console.log(this.state.value);
+    }
+
     render() {
 
         return (
@@ -100,7 +184,7 @@ class Test extends Component {
                     </div>
                 </aside>
                 <main>
-                    <div className={'search-wrapper'}>
+                    <div className={'search-wrapper'} onChange={this.updateInput} >
                         <input type={'text'} placeholder={'Search...'} />
                     </div>
 
