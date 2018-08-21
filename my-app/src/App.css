@@ -25,6 +25,12 @@
   font-size: large;
 }
 
+.content button {
+  text-align: center;
+  border: 1px seagreen;
+  width: 100px;
+  height: 50px;
+}
 .movies-wrapper{
   display: flex;
   justify-content: center;
@@ -40,14 +46,15 @@
   padding: 5px;
   display: flex;
   flex-wrap: wrap;
-  height: 65px;
+  height: auto;
+  width: auto;
   text-align: center;
 }
 
 .movie-content h3{
   margin: 5px 0;
   text-align: center;
-  max-height: 30px;
+  max-height: max-content;
   overflow: hidden;
   width: 100%;
   font-size: 14px;
@@ -169,6 +176,11 @@ main .page-title{
   justify-content: center;
   align-items: center;
   background-color: rgba(34, 34, 34, 0.57);
+}
+
+.movie-checklist :checked {
+  width: 100%;
+  height: 100%;
 }
 
 

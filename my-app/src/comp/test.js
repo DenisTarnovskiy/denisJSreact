@@ -15,7 +15,7 @@ const axios = require('axios');class Test extends Component {
             currentVideo: '',
             page: 1,
             value: '',
-            genres: []
+            genres: [],
 
         };
         this.updateInput = this.updateInput.bind(this);
@@ -81,23 +81,22 @@ const axios = require('axios');class Test extends Component {
                                         'picture': movie.poster_path,
                                         'videos': movieVideos,
                                         'genres': movie.genre_ids,
-                                        'genres_names': []
+                                        'genres_names': [],
+                                        'isChecked': false
                                     });
 
                                 }
                             });
                             this.state.movies.forEach((movie) => {
-                                // console.log(movie.genres);
-                                // for (var i in movie.genres) {
+
                                 movie.genres.forEach((genre, index_genre) => {
-                                    //console.log(movie.genres[i]+" genre current")
-                                    // for (var element in this.state.genres) {
+
                                     this.state.genres.forEach((element, index) => {
-                                        //   console.log(element.id+" element")
+
 
                                         if (genre === element.id) {
 
-                                           // movie.genres_names[index_genre] = element.name;
+
                                             moviesArray.push({
 
                                                 'genres_names': element.name
@@ -205,6 +204,27 @@ const axios = require('axios');class Test extends Component {
 
     }
 
+
+    checkedToggle  = (movie_id) => {
+        this.state.movies.forEach((movie, index) => {
+            if (movie.id === movie_id ){
+
+                if (movie.isChecked) {
+                    movie.isChecked = false;
+
+                } else {
+                    movie.isChecked = true;
+                }
+                console.log(movie);
+
+            }
+        });
+        // this.state.movies[0].isChecked = false;
+        // console.log(movie_id+"op op");
+
+
+    };
+
     popupToggle (video) {
         if(video) {
             this.setState({currentVideo: video , showPopup: true});
@@ -284,6 +304,10 @@ const axios = require('axios');class Test extends Component {
         this.videoSearch(this.state.value);
         console.log(this.state.value);
     }
+    timeFunction(text) {
+        setTimeout(function(){ alert(text); }, 2000);
+        ;
+    }
 
     render() {
 
@@ -293,11 +317,22 @@ const axios = require('axios');class Test extends Component {
                 <aside>
                     <header>Movie Store</header>
                     <div className={'content'}>
-                        <p>bla-bla</p>
-                        <p>bla-bla</p>
-                        <p>bla-bla</p>
-                        <p>bla-bla</p>
-                        <p>bla-bla</p>
+                        <p>
+                            <button onClick={() => ( this.timeFunction("LATEST CLICK"),
+
+                                console.log('LATEST CLICK'))} >LATEST</button>
+                        </p>
+                        <p>
+                            <button onClick={() => ( this.timeFunction("POPULAR CLICK"),
+
+                                                    console.log('POPULAR CLICK'))} >POPULAR</button>
+                        </p>
+                        <p>
+                            <button onClick={() => ( this.timeFunction("WATCHLIST CLICK"),
+
+                                console.log('WATCHLIST CLICK'))} >WATCHLIST</button>
+                        </p>
+
                     </div>
                 </aside>
                 <main>
@@ -309,34 +344,30 @@ const axios = require('axios');class Test extends Component {
                         <h1 className={'page-title'}>List Name</h1>
                         {this.state.movies.map(movie =>
                             <div className={'movies'} key={movie.id}>
+                                {console.log({movie})}
+
+                                <label>
+                                    <input type = "checkbox"
+                                           onChange={() => this.checkedToggle(movie.id)}
+                                    />
+                                </label>
                                 <div className={'movie-img-wrapper'}>
                                     <div className={'movie-img-hover'}>
                                         <div className={'popup-toggle'} onClick={() => this.popupToggle(movie.videos[0])}/>
                                     </div>
                                     <img src={'http://image.tmdb.org/t/p/w185/' + movie.picture} alt={movie.title}/>
                                 </div>
-                                <div className={'movie-content'}>
-                                    <h3>{movie.title}</h3>
-                                    <b>{movie.rating}</b>
-                                    <b>{movie.genres_names[0]}</b>
+                                    <div className={'movie-content'}>
+                                        <h3>{movie.title}</h3>
 
+                                        <b>{movie.rating}</b>
+                                        <h3> {movie.genres_names.map((genre, index)=>
+                                            <div className="badge badge-dark mr-2" key={index}>{index+1+")"} {genre}</div>
+                                        )}</h3>
 
-                                    <div className = {'movie-content-genre'}>
-                                         </div>
 
                                 </div>
-                                {/*Я убрал iframe, потому что их слишком много, и у меня начинает браузер глючить*/}
 
-                                {/*{movie.videos.map((video, index) =>*/}
-                                    {/*<p key={index}> video src = {'https://www.youtube.com/embed/'+video}</p>*/}
-                                    {/*// <iframe width="560"*/}
-                                    {/*//         height="315"*/}
-                                    {/*//         src={'https://www.youtube.com/embed/' + video }*/}
-                                    {/*//         frameBorder="0"*/}
-                                    {/*//         allow="autoplay; encrypted-media" allowFullScreen>*/}
-                                    {/*//*/}
-                                    {/*// </iframe>*/}
-                                {/*)}*/}
                             </div>
                         )}
                         {this.state.showPopup && this.state.currentVideo ?
