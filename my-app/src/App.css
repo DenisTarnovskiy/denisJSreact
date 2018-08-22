@@ -58,11 +58,13 @@
   overflow: hidden;
   width: 100%;
   font-size: 14px;
+
 }
 .movie-content b{
   margin:0  auto;
   width: 100%;
   margin-top: auto;
+  color: aqua;
 }
 
 .movie-img-wrapper{

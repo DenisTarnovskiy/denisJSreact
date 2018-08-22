@@ -3,7 +3,8 @@ import * as Rx from 'rxjs';
 import { from } from 'rxjs';
 
 
-const axios = require('axios');class Test extends Component {
+import axios from 'axios';
+class Test extends Component {
 
     constructor(props) {
         super(props);
@@ -23,130 +24,126 @@ const axios = require('axios');class Test extends Component {
         this.handleChange = this.handleChange.bind(this);
     }
 
-    getMovies() {
+
+    getLatest() {
+
+        axios.get('https://api.themoviedb.org/3/discover/movie?api_key=95787530723fdf659807136ee61b9df9&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page)
+
+    }
+
+    getGenres() {
+
+
+        axios.get('https://api.themoviedb.org/3/genre/movie/list?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
+    }
+
+
+    getLatestMovies() {
         // обьявляем массив, в котором будет окончательный результат со всеми фильмами
         let moviesArray = [];
-        const apiKey = '95787530723fdf659807136ee61b9df9';
+        let genre_array =[];
+        axios.all([this.getGenres(), this.getLatest()])
+            .then(axios.spread(function (genres, movies) {
+                    // перебираем все получаенные фильмы
+                    console.log(movies);
+                    movies.data.results.forEach((movie, movieIndex) => {
+                        // обьявляем массив, в который будет записываться все видео фильма
+                        let movieVideos = [];
+                        // получаем все видео по одному фильму
+                        axios.get('https://api.themoviedb.org/3/movie/' + movie.id + '/videos?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
+                            .then(videos => {
+                                // перебираем все видео
+                                videos.data.results.forEach((video, videoIndex) => {
+                                    // добавляем видео в массив
 
 
-        // получаем все фильмы
+                                    movieVideos.push(video.key);
+                                    // проверяем, если количество полученных видео равна индексу последнего видео в массиве, тогда добавлем фильм в массив окончательных фильмов
+                                    if (videoIndex + 1 === videos.data.results.length) {
+                                        // неведомая залупа, сейвим рейтинг в переменную
+                                        const rating = movie.vote_average;
 
+                                        moviesArray.push({
+                                            'id': movie.id,
+                                            'title': movie.title,
+                                            'rating': rating,
+                                            'picture': movie.poster_path,
+                                            'videos': movieVideos,
+                                            'genres': movie.genre_ids,
+                                            'genres_names': [],
+                                            'isChecked': false
+                                        });
 
-    //     let response = fetch("https://api.themoviedb.org/3/discover/movie?api_key=' + apiKey + '&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page")
-    //         .then(response => {
-    //             return response.json();
-    //         });
-    //
-    //     let stream = Rx.Observable.fromPromise(response)
-    //         .map(data => data.videos
-    //         .map(video =>
-    //             ({
-    //                 'id': video.id,
-    //                 'title': video.title,
-    //                // 'rating': rating,
-    //                 'picture': video.poster_path,
-    //               //  'videos': movieVideos
-    //             })
-    //         )
-    //         );
-    // }
-
-
-        axios.get('https://api.themoviedb.org/3/discover/movie?api_key=' + apiKey + '&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page)
-            .then(movies => {
-                // перебираем все получаенные фильмы
-                console.log(movies);
-                movies.data.results.forEach((movie, movieIndex) => {
-                    // обьявляем массив, в который будет записываться все видео фильма
-                    let movieVideos = [];
-                    // получаем все видео по одному фильму
-                    axios.get('https://api.themoviedb.org/3/movie/'+ movie.id +'/videos?api_key=' + apiKey + '&language=en-US')
-                        .then(videos => {
-                            // перебираем все видео
-                            videos.data.results.forEach((video, videoIndex) => {
-                                // добавляем видео в массив
-
-
-
-                                movieVideos.push(video.key);
-                                // проверяем, если количество полученных видео равна индексу последнего видео в массиве, тогда добавлем фильм в массив окончательных фильмов
-                                if (videoIndex+1 === videos.data.results.length){
-                                    // неведомая залупа, сейвим рейтинг в переменную
-                                    const rating = movie.vote_average;
-
-                                    moviesArray.push({
-                                        'id':movie.id,
-                                        'title' : movie.title,
-                                        'rating': rating,
-                                        'picture': movie.poster_path,
-                                        'videos': movieVideos,
-                                        'genres': movie.genre_ids,
-                                        'genres_names': [],
-                                        'isChecked': false
-                                    });
-
-                                }
-                            });
-                            this.state.movies.forEach((movie) => {
-
-                                movie.genres.forEach((genre, index_genre) => {
-
-                                    this.state.genres.forEach((element, index) => {
-
-
-                                        if (genre === element.id) {
-
-
-                                            moviesArray.push({
-
-                                                'genres_names': element.name
-                                            });
-
-
-
-                                            console.log(genre + " URA, wa have genre - " + element.name);
-                                            console.log(this.state.movies.genres_names + " имя жанра по id");
-                                        }
-                                        else element++
-
-
-                                    });
-
-
+                                    }
                                 });
 
-                                console.log('_________________________')
+                                genres.data.genres.forEach((genre, genre_index) => {
+                                        genre_array.push({
+                                            'id': genre.id,
+                                            'name': genre.name
+                                        });
 
-                            });
-                            // проверяем, если количество полученных фильмов равна индексу последнего фильма в массиве, тогда сохраняем результат в state
-                            if (movieIndex+1 === movies.data.results.length){
-                                //
-                                this.setState({movies: moviesArray});
+                                    }
+                                );
 
-                                let array_geners = [];
+
+                                this.state.movies.forEach((movie) => {
+
+                                    movie.genres.forEach((genre, index_genre) => {
+
+                                        this.state.genres.forEach((element, index) => {
+
+
+                                            if (genre === element.id) {
+
+
+                                                moviesArray.push({
+
+                                                    'genres_names': element.name
+                                                });
+
+
+                                                console.log(genre + " URA, wa have genre - " + element.name);
+                                                console.log(this.state.movies.genres_names + " имя жанра по id");
+                                            }
+                                            else element++
+
+
+                                        });
+
+
+                                    });
+
+                                    console.log('_________________________')
+
+                                });
+                                // проверяем, если количество полученных фильмов равна индексу последнего фильма в массиве, тогда сохраняем результат в state
+                                if (movieIndex + 1 === movies.data.results.length) {
+                                    //
+                                    this.setState({movies: moviesArray});
+
+                                    let array_geners = [];
                                     this.state.movies.forEach((movie) => {
-                                       // console.log(movie.genres);
-                                       // for (var i in movie.genres) {
-                                            movie.genres.forEach((genre, index_genre) => {
+                                        // console.log(movie.genres);
+                                        // for (var i in movie.genres) {
+                                        movie.genres.forEach((genre, index_genre) => {
                                             //console.log(movie.genres[i]+" genre current")
                                             // for (var element in this.state.genres) {
-                                                    this.state.genres.forEach((element, index) => {
-                                                        //   console.log(element.id+" element")
+                                            this.state.genres.forEach((element, index) => {
+                                                //   console.log(element.id+" element")
 
-                                                            if (genre === element.id) {
+                                                if (genre === element.id) {
 
-                                                                movie.genres_names[index_genre] = element.name;
-
-
+                                                    movie.genres_names[index_genre] = element.name;
 
 
-                                                                console.log(genre + " URA, wa have genre - " + element.name);
-                                                                console.log(this.state.movies.genres_names + " имя жанра по id");
-                                                            }
-                                                            else element++
+                                                    console.log(genre + " URA, wa have genre - " + element.name);
+                                                    console.log(this.state.movies.genres_names + " имя жанра по id");
+                                                }
+                                                else element++
 
 
-                                                    });
+                                            });
 
 
                                         });
@@ -154,53 +151,53 @@ const axios = require('axios');class Test extends Component {
                                         console.log('_________________________')
 
                                     });
-                                console.log(this.state.movies)
+                                    console.log(this.state.movies)
 
 
-                            }
+                                }
 
-                            //console.log(this.state.movies)
-                        });
-                });
-            });
+                                //console.log(this.state.movies)
+                            });
+                    });
 
+
+            }));
     }
 
-    getGenres() {
-
-        let genre_array = [];
-
-        const apiKey = '95787530723fdf659807136ee61b9df9';
 
 
-        axios.get('https://api.themoviedb.org/3/genre/movie/list?api_key=' + apiKey + '&language=en-US')
-            .then(genres_id => {
-                console.log(genres_id);
-                genres_id.data.genres.forEach((genre, genre_index) => {
-                        genre_array.push({
-                            'id': genre.id,
-                            'name': genre.name
-                        });
-
-                     }
-                );
-                this.setState({genres: genre_array});
-                console.log(this.state.genres);
-
-                // this.state.genres.forEach((genre) => {
-                //
-                //     console.log(genre.id+' ===>'+genre.name);
-                //
-                //
-                // });
-            });
-        }
+    // getMoviesGenres() {
+    //
+    //     let genre_array = [];
+    //
+    //         axios.all([this.getGenres()])
+    //             .then(axios.spread(function(genres_id) {
+    //             console.log(genres_id);
+    //             genres_id.data.genres.forEach((genre, genre_index) => {
+    //                     genre_array.push({
+    //                         'id': genre.id,
+    //                         'name': genre.name
+    //                     });
+    //
+    //                  }
+    //             );
+    //             this.setState({genres: genre_array});
+    //             console.log(this.state.genres);
+    //
+    //             // this.state.genres.forEach((genre) => {
+    //             //
+    //             //     console.log(genre.id+' ===>'+genre.name);
+    //             //
+    //             //
+    //             // });
+    //         }));
+    //     }
 
     componentDidMount() {
 
-        this.getGenres();
+        //this.getMoviesGenres();
 
-        this.getMovies();
+        this.getLatestMovies();
 
     }
 
@@ -238,7 +235,7 @@ const axios = require('axios');class Test extends Component {
         if(this.state.page + counter !== 0){
             console.log('change');
             this.setState({page: this.state.page + counter});
-            this.getMovies();
+            this.getLatestMovies();
         }
         console.log(this.state.page);
     }
