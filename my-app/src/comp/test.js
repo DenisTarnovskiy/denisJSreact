@@ -27,25 +27,34 @@ class Test extends Component {
 
     getLatest() {
 
-        axios.get('https://api.themoviedb.org/3/discover/movie?api_key=95787530723fdf659807136ee61b9df9&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page)
+       return axios.get('https://api.themoviedb.org/3/discover/movie?api_key=95787530723fdf659807136ee61b9df9&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page)
 
     }
 
     getGenres() {
 
-
-        axios.get('https://api.themoviedb.org/3/genre/movie/list?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
+       return axios.get('https://api.themoviedb.org/3/genre/movie/list?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
     }
-
 
     getLatestMovies() {
         // обьявляем массив, в котором будет окончательный результат со всеми фильмами
         let moviesArray = [];
-        let genre_array =[];
+        let genre_array = [];
+
         axios.all([this.getGenres(), this.getLatest()])
             .then(axios.spread(function (genres, movies) {
                     // перебираем все получаенные фильмы
+                console.log(genres);
                     console.log(movies);
+
+                genres.data.genres.forEach((genre, genre_index) => {
+                        genre_array.push({
+                            'id': genre.id,
+                            'name': genre.name
+                        });
+
+                    });
+
                     movies.data.results.forEach((movie, movieIndex) => {
                         // обьявляем массив, в который будет записываться все видео фильма
                         let movieVideos = [];
@@ -77,91 +86,37 @@ class Test extends Component {
                                     }
                                 });
 
-                                genres.data.genres.forEach((genre, genre_index) => {
-                                        genre_array.push({
-                                            'id': genre.id,
-                                            'name': genre.name
-                                        });
+                                    movie.genre_ids.forEach((genre, index_genre) => {
 
-                                    }
-                                );
-
-
-                                this.state.movies.forEach((movie) => {
-
-                                    movie.genres.forEach((genre, index_genre) => {
-
-                                        this.state.genres.forEach((element, index) => {
+                                        genre_array.forEach((element, index_element) => {
 
 
                                             if (genre === element.id) {
 
 
-                                                moviesArray.push({
+                                                moviesArray[movieIndex].genres_names.push(element.name)  ;
 
-                                                    'genres_names': element.name
-                                                });
 
 
                                                 console.log(genre + " URA, wa have genre - " + element.name);
-                                                console.log(this.state.movies.genres_names + " имя жанра по id");
                                             }
-                                            else element++
-
-
                                         });
-
 
                                     });
 
                                     console.log('_________________________')
 
-                                });
-                                // проверяем, если количество полученных фильмов равна индексу последнего фильма в массиве, тогда сохраняем результат в state
-                                if (movieIndex + 1 === movies.data.results.length) {
-                                    //
-                                    this.setState({movies: moviesArray});
-
-                                    let array_geners = [];
-                                    this.state.movies.forEach((movie) => {
-                                        // console.log(movie.genres);
-                                        // for (var i in movie.genres) {
-                                        movie.genres.forEach((genre, index_genre) => {
-                                            //console.log(movie.genres[i]+" genre current")
-                                            // for (var element in this.state.genres) {
-                                            this.state.genres.forEach((element, index) => {
-                                                //   console.log(element.id+" element")
-
-                                                if (genre === element.id) {
-
-                                                    movie.genres_names[index_genre] = element.name;
-
-
-                                                    console.log(genre + " URA, wa have genre - " + element.name);
-                                                    console.log(this.state.movies.genres_names + " имя жанра по id");
-                                                }
-                                                else element++
-
-
-                                            });
-
-
-                                        });
-
-                                        console.log('_________________________')
-
-                                    });
-                                    console.log(this.state.movies)
-
-
-                                }
-
-                                //console.log(this.state.movies)
                             });
+                        if (movieIndex + 1 === movies.data.results.length) {
+                            console.log(movieIndex+1 + "=" + movies.data.results.length);
+                            console.log(moviesArray);
+                            this.setState({movies: moviesArray});
+
+                        }
+
                     });
 
-
-            }));
+             }));
     }
 
 
