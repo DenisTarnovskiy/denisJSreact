@@ -17,6 +17,7 @@ class Test extends Component {
             page: 1,
             value: '',
             genres: [],
+            watchlist: []
 
         };
         this.updateInput = this.updateInput.bind(this);
@@ -25,9 +26,12 @@ class Test extends Component {
     }
 
 
+    getDiscover() {
+        return axios.get('https://api.themoviedb.org/3/discover/movie?api_key=95787530723fdf659807136ee61b9df9&language=en-US&sort_by=vote_avarege.desc&include_adult=false&include_video=false&page=' + this.state.page)
+    }
     getLatest() {
 
-       return axios.get('https://api.themoviedb.org/3/discover/movie?api_key=95787530723fdf659807136ee61b9df9&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=true&primary_release_year=2018&page=' + this.state.page)
+       return axios.get('https://api.themoviedb.org/3/movie/latest?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
 
     }
 
@@ -36,36 +40,168 @@ class Test extends Component {
        return axios.get('https://api.themoviedb.org/3/genre/movie/list?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
     }
 
-    getLatestMovies() {
+    getPopular() {
+       return axios.get('https://api.themoviedb.org/3/movie/popular?api_key=95787530723fdf659807136ee61b9df9&language=en-US&page=1')
+
+            }
+
+    getDiscoverFilms() {
+
+        let self = this;
         // обьявляем массив, в котором будет окончательный результат со всеми фильмами
         let moviesArray = [];
-        let genre_array = [];
+
+        axios.all([this.getGenres(), this.getDiscover()])
+            .then(axios.spread(function (genres, movies) {
+                // перебираем все получаенные фильмы
+                console.log(genres);
+                console.log(movies);
+                movies.data.results.forEach((movie, movieIndex) => {
+
+                    let genre_array = [];
+
+                    genres.data.genres.forEach((genre, index_genre) => {
+                        if (movie.genre_ids.includes(genre.id)) {
+                            genre_array.push(genres.data.genres[index_genre].name)
+                        }
+                    });
+
+                    // обьявляем массив, в который будет записываться все видео фильма
+                    let movieVideos = [];
+                    // получаем все видео по одному фильму
+
+                    axios.get('https://api.themoviedb.org/3/movie/' + movie.id + '/videos?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
+                        .then(videos => {
+                            // перебираем все видео
+                            videos.data.results.forEach((video, videoIndex) => {
+
+                                // добавляем видео в массив
+                                movieVideos.push(video.key);
+                                // проверяем, если количество полученных видео равна индексу последнего видео в массиве, тогда добавлем фильм в массив окончательных фильмов
+                                if (videoIndex + 1 === videos.data.results.length) {
+                                    // неведомая залупа, сейвим рейтинг в переменную
+                                    const rating = movie.vote_average;
+
+                                    moviesArray.push({
+                                        'id': movie.id,
+                                        'title': movie.title,
+                                        'rating': rating,
+                                        'picture': movie.poster_path,
+                                        'videos': movieVideos,
+                                        'genres': movie.genre_ids,
+                                        'genres_names': genre_array,
+                                        'isChecked': false
+                                    });
+
+                                }
+
+
+                            });
+                            if (movieIndex + 1 === movies.data.results.length) {
+                                console.log(movieIndex + 1 + "=" + movies.data.results.length);
+                                self.setState({movies: moviesArray});
+
+                            }
+                        });
+                });
+            }));
+    }
+
+    getPopularMovies() {
+
+        let self = this;
+        // обьявляем массив, в котором будет окончательный результат со всеми фильмами
+        let moviesArray = [];
+
+        axios.all([this.getGenres(), this.getPopular()])
+            .then(axios.spread(function (genres, movies) {
+                // перебираем все получаенные фильмы
+                console.log(genres);
+                console.log(movies);
+                movies.data.results.forEach((movie, movieIndex) => {
+
+                    let genre_array = [];
+
+                    genres.data.genres.forEach((genre, index_genre) => {
+                        if (movie.genre_ids.includes(genre.id)) {
+                            genre_array.push(genres.data.genres[index_genre].name)
+                        }
+                    });
+
+                    // обьявляем массив, в который будет записываться все видео фильма
+                    let movieVideos = [];
+                    // получаем все видео по одному фильму
+
+                    axios.get('https://api.themoviedb.org/3/movie/' + movie.id + '/videos?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
+                        .then(videos => {
+                            // перебираем все видео
+                            videos.data.results.forEach((video, videoIndex) => {
+
+                                // добавляем видео в массив
+                                movieVideos.push(video.key);
+                                // проверяем, если количество полученных видео равна индексу последнего видео в массиве, тогда добавлем фильм в массив окончательных фильмов
+                                if (videoIndex + 1 === videos.data.results.length) {
+                                    // неведомая залупа, сейвим рейтинг в переменную
+                                    const rating = movie.vote_average;
+
+                                    moviesArray.push({
+                                        'id': movie.id,
+                                        'title': movie.title,
+                                        'rating': rating,
+                                        'picture': movie.poster_path,
+                                        'videos': movieVideos,
+                                        'genres': movie.genre_ids,
+                                        'genres_names': genre_array,
+                                        'isChecked': false
+                                    });
+
+                                }
+
+
+                            });
+                            if (movieIndex + 1 === movies.data.results.length) {
+                                console.log(movieIndex + 1 + "=" + movies.data.results.length);
+                                self.setState({movies: moviesArray});
+
+                            }
+                        });
+                });
+            }));
+    }
+
+
+
+    getLatestMovies() {
+
+        let self = this;
+        // обьявляем массив, в котором будет окончательный результат со всеми фильмами
+        let moviesArray = [];
 
         axios.all([this.getGenres(), this.getLatest()])
             .then(axios.spread(function (genres, movies) {
                     // перебираем все получаенные фильмы
                 console.log(genres);
                     console.log(movies);
+                    movies.data.results.forEach((movie, movieIndex) => {
 
-                genres.data.genres.forEach((genre, genre_index) => {
-                        genre_array.push({
-                            'id': genre.id,
-                            'name': genre.name
+                        let genre_array = [];
+
+                        genres.data.genres.forEach((genre, index_genre) => {
+                            if (movie.genre_ids.includes(genre.id)) {
+                                genre_array.push(genres.data.genres[index_genre].name)
+                            }
                         });
 
-                    });
-
-                    movies.data.results.forEach((movie, movieIndex) => {
                         // обьявляем массив, в который будет записываться все видео фильма
                         let movieVideos = [];
                         // получаем все видео по одному фильму
+
                         axios.get('https://api.themoviedb.org/3/movie/' + movie.id + '/videos?api_key=95787530723fdf659807136ee61b9df9&language=en-US')
                             .then(videos => {
                                 // перебираем все видео
                                 videos.data.results.forEach((video, videoIndex) => {
+
                                     // добавляем видео в массив
-
-
                                     movieVideos.push(video.key);
                                     // проверяем, если количество полученных видео равна индексу последнего видео в массиве, тогда добавлем фильм в массив окончательных фильмов
                                     if (videoIndex + 1 === videos.data.results.length) {
@@ -79,103 +215,61 @@ class Test extends Component {
                                             'picture': movie.poster_path,
                                             'videos': movieVideos,
                                             'genres': movie.genre_ids,
-                                            'genres_names': [],
+                                            'genres_names': genre_array,
                                             'isChecked': false
                                         });
 
                                     }
+
+
                                 });
+                                if (movieIndex + 1 === movies.data.results.length) {
+                                    console.log(movieIndex + 1 + "=" + movies.data.results.length);
+                                    self.setState({movies: moviesArray});
 
-                                    movie.genre_ids.forEach((genre, index_genre) => {
-
-                                        genre_array.forEach((element, index_element) => {
-
-
-                                            if (genre === element.id) {
-
-
-                                                moviesArray[movieIndex].genres_names.push(element.name)  ;
-
-
-
-                                                console.log(genre + " URA, wa have genre - " + element.name);
-                                            }
-                                        });
-
-                                    });
-
-                                    console.log('_________________________')
-
+                                }
                             });
-                        if (movieIndex + 1 === movies.data.results.length) {
-                            console.log(movieIndex+1 + "=" + movies.data.results.length);
-                            console.log(moviesArray);
-                            this.setState({movies: moviesArray});
-
-                        }
-
                     });
-
-             }));
+            }));
     }
 
-
-
-    // getMoviesGenres() {
-    //
-    //     let genre_array = [];
-    //
-    //         axios.all([this.getGenres()])
-    //             .then(axios.spread(function(genres_id) {
-    //             console.log(genres_id);
-    //             genres_id.data.genres.forEach((genre, genre_index) => {
-    //                     genre_array.push({
-    //                         'id': genre.id,
-    //                         'name': genre.name
-    //                     });
-    //
-    //                  }
-    //             );
-    //             this.setState({genres: genre_array});
-    //             console.log(this.state.genres);
-    //
-    //             // this.state.genres.forEach((genre) => {
-    //             //
-    //             //     console.log(genre.id+' ===>'+genre.name);
-    //             //
-    //             //
-    //             // });
-    //         }));
-    //     }
 
     componentDidMount() {
 
-        //this.getMoviesGenres();
-
-        this.getLatestMovies();
-
+        this.getDiscoverFilms();
     }
 
+    getWatchList() {
 
-    checkedToggle  = (movie_id) => {
-        this.state.movies.forEach((movie, index) => {
-            if (movie.id === movie_id ){
+        this.setState({movies: this.state.watchlist})
 
-                if (movie.isChecked) {
-                    movie.isChecked = false;
+    }
+    checkedToggle(movie)  {
+        if (movie.isChecked === false) {
+            movie.isChecked = true;
+            this.state.watchlist.push(movie);
+        } else {
+            movie.isChecked = false
+            let index = this.state.watchlist.indexOf(movie);
+            this.state.watchlist.splice(index,1)
+        }
+        console.log(movie)
+        console.log(this.state.watchlist)
+                //
+                // if (movie.isChecked === true) {
+                //     this.state.watchlist.push(movie);
+                //     console.log(movie);
+                // } else if(!movie.isChecked || this.state.watchlist.includes(movie)) {
+                //        let index = this.state.watchlist.indexOf(movie);
+                //        this.state.watchlist.splice(index,1)
+                //     }
 
-                } else {
-                    movie.isChecked = true;
-                }
-                console.log(movie);
-
-            }
-        });
+            };
         // this.state.movies[0].isChecked = false;
         // console.log(movie_id+"op op");
 
 
-    };
+
 
     popupToggle (video) {
         if(video) {
@@ -240,7 +334,6 @@ class Test extends Component {
                             }
                         });
                 });
-               // console.log(this.state.movies)
             });
     }
 
@@ -258,10 +351,12 @@ class Test extends Component {
     }
     timeFunction(text) {
         setTimeout(function(){ alert(text); }, 2000);
-        ;
+
     }
 
     render() {
+
+        console.log(this.state.movies);
 
         return (
 
@@ -270,17 +365,17 @@ class Test extends Component {
                     <header>Movie Store</header>
                     <div className={'content'}>
                         <p>
-                            <button onClick={() => ( this.timeFunction("LATEST CLICK"),
+                            <button onClick={() => ( this.getLatestMovies(),
 
                                 console.log('LATEST CLICK'))} >LATEST</button>
                         </p>
                         <p>
-                            <button onClick={() => ( this.timeFunction("POPULAR CLICK"),
+                            <button onClick={() => ( this.getPopularMovies(),
 
                                                     console.log('POPULAR CLICK'))} >POPULAR</button>
                         </p>
                         <p>
-                            <button onClick={() => ( this.timeFunction("WATCHLIST CLICK"),
+                            <button onClick={() => ( this.getWatchList(),
 
                                 console.log('WATCHLIST CLICK'))} >WATCHLIST</button>
                         </p>
@@ -296,11 +391,9 @@ class Test extends Component {
                         <h1 className={'page-title'}>List Name</h1>
                         {this.state.movies.map(movie =>
                             <div className={'movies'} key={movie.id}>
-                                {console.log({movie})}
-
                                 <label>
                                     <input type = "checkbox"
-                                           onChange={() => this.checkedToggle(movie.id)}
+                                           onChange={() => this.checkedToggle(movie)}
                                     />
                                 </label>
                                 <div className={'movie-img-wrapper'}>
@@ -313,10 +406,9 @@ class Test extends Component {
                                         <h3>{movie.title}</h3>
 
                                         <b>{movie.rating}</b>
-                                        <h3> {movie.genres_names.map((genre, index)=>
+                                        <h3>{movie.genres_names.map((genre, index)=>
                                             <div className="badge badge-dark mr-2" key={index}>{index+1+")"} {genre}</div>
                                         )}</h3>
-
 
                                 </div>
 
